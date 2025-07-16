@@ -1,0 +1,72 @@
+[tool.poetry]
+name = "shitlint"
+version = "0.0.1"
+description = "Your code is shit. Here's why."
+authors = ["Tyson Chan <tyson.chan@proton.me>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/iteebz/shitlint"
+repository = "https://github.com/iteebz/shitlint"
+keywords = ["shitlint", "shit", "lint", "your", "code", "is", "bad", "and", "you", "should", "feel", "bad", "brutal", "honest", "roast"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+packages = [{include = "shitlint", from = "src"}]
+
+[tool.poetry.scripts]
+shitlint = "shitlint.cli:main"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+click = "^8.0.0"
+rich = "^13.0.0"
+tree-sitter = "^0.20.0"
+tree-sitter-python = "^0.20.0"
+tree-sitter-javascript = "^0.20.0"
+tree-sitter-typescript = "^0.20.0"
+tree-sitter-go = "^0.20.0"
+pathspec = "^0.11.0"
+pydantic = "^2.0.0"
+watchdog = "^3.0.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.0.0"
+pytest-cov = "^4.0.0"
+black = "^23.0.0"
+isort = "^5.0.0"
+mypy = "^1.0.0"
+pre-commit = "^3.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+target-version = ['py310']
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
