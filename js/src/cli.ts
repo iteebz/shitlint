@@ -18,21 +18,49 @@ program
 program
   .argument("<path>", "Path to analyze")
   .option("--brutal", "Extra brutal mode")
-  .action((path: string, options: { brutal?: boolean }) => {
+  .action(async (path: string, options: { brutal?: boolean }) => {
     console.log(chalk.red.bold("🔍 SHITLINT ANALYSIS"));
-    console.log(chalk.italic("Your code is shit. Here's why.\n"));
+    console.log(chalk.italic("Your code is shit. Here's why.\\n"));
     
-    const results = analyzeCode(path);
+    const results = await analyzeCode(path);
+    
+    if (results.length === 0) {
+      console.log(chalk.green("✅ No violations found. Your code doesn't completely suck."));
+      return;
+    }
     
     results.forEach(result => {
-      console.log(chalk.red(`🚨 ${result.message}`));
-      console.log(chalk.gray(`   📁 ${result.filePath}\n`));
+      const emoji = result.severity === 'brutal' ? '💀' : 
+                   result.severity === 'moderate' ? '⚠️' : '🟡';
+      const style = result.severity === 'brutal' ? chalk.red.bold : 
+                   result.severity === 'moderate' ? chalk.yellow : chalk.dim.yellow;
+      
+      console.log(style(`${emoji} ${result.message}`));
+      console.log(chalk.gray(`   📁 ${result.filePath}`));
+      if (result.lineNumber) {
+        console.log(chalk.gray(`   📊 Line: ${result.lineNumber}`));
+      }
+      if (result.rule) {
+        console.log(chalk.gray(`   🔍 Rule: ${result.rule}\\n`));
+      }
     });
     
-    if (options.brutal) {
-      console.log(chalk.red.bold("VERDICT: Your code looks like it was written during an earthquake"));
+    // Summary stats
+    const brutalCount = results.filter(r => r.severity === 'brutal').length;
+    const moderateCount = results.filter(r => r.severity === 'moderate').length;
+    const gentleCount = results.length - brutalCount - moderateCount;
+    
+    console.log(chalk.bold("📈 DAMAGE REPORT:"));
+    console.log(`   💀 War crimes: ${brutalCount}`);
+    console.log(`   ⚠️  Code smells: ${moderateCount}`);
+    console.log(`   🟡 Minor issues: ${gentleCount}`);
+    
+    if (brutalCount > 0) {
+      console.log(chalk.red.bold("\\nVERDICT: Your code looks like it was written during an earthquake"));
+    } else if (moderateCount > 0) {
+      console.log(chalk.yellow("\\nVERDICT: Your code needs architectural liposuction"));
     } else {
-      console.log(chalk.yellow("VERDICT: Your code needs work"));
+      console.log(chalk.dim.yellow("\\nVERDICT: Minor bloat detected. Time for a code diet."));
     }
   });
 
