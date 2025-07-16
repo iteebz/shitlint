@@ -22,14 +22,41 @@ def main(path: Path, brutal: bool) -> None:
     
     results = analyze_code(path)
     
-    for result in results:
-        console.print(f"🚨 {result.message}", style="red")
-        console.print(f"   📁 {result.file_path}\n")
+    if not results:
+        console.print(Text("✅ No giant files found. Your code doesn't completely suck.", style="green"))
+        return
     
-    if brutal:
-        console.print(Text("VERDICT: Your code looks like it was written during an earthquake", style="bold red"))
+    for result in results:
+        # Choose emoji and color based on severity
+        if result.severity == "brutal":
+            emoji, style = "💀", "bold red"
+        elif result.severity == "moderate":
+            emoji, style = "⚠️", "yellow"
+        else:
+            emoji, style = "🟡", "dim yellow"
+        
+        console.print(f"{emoji} {result.message}", style=style)
+        console.print(f"   📁 {result.file_path}")
+        if result.line_number:
+            console.print(f"   📊 Line: {result.line_number}")
+        if result.rule:
+            console.print(f"   🔍 Rule: {result.rule}\n")
+    
+    # Summary stats
+    brutal_count = sum(1 for r in results if r.severity == "brutal")
+    moderate_count = sum(1 for r in results if r.severity == "moderate")
+    
+    console.print(Text(f"\n📈 DAMAGE REPORT:", style="bold"))
+    console.print(f"   💀 War crimes: {brutal_count}")
+    console.print(f"   ⚠️  Novellas: {moderate_count}")
+    console.print(f"   🟡 Chubby files: {len(results) - brutal_count - moderate_count}")
+    
+    if brutal_count > 0:
+        console.print(Text("\nVERDICT: Your code looks like it was written during an earthquake", style="bold red"))
+    elif moderate_count > 0:
+        console.print(Text("\nVERDICT: Your code needs some architectural liposuction", style="yellow"))
     else:
-        console.print(Text("VERDICT: Your code needs work", style="yellow"))
+        console.print(Text("\nVERDICT: Minor bloat detected. Time for a code diet.", style="dim yellow"))
 
 
 if __name__ == "__main__":
