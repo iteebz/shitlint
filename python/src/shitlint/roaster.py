@@ -1,11 +1,13 @@
-"""Simple roaster - no agent ceremony, just LLM roasting."""
+"""Clean roaster - no ceremony, proper separation."""
 
-from typing import List
+import os
+from typing import List, Optional
 from .core import ShitLintResult
+from .llm import OpenAIProvider, AnthropicProvider, GeminiProvider
 
 
 def format_violations(results: List[ShitLintResult]) -> str:
-    """Format violations for LLM consumption."""
+    """Format violations for display."""
     if not results:
         return "No violations found. Suspiciously clean code... 🤔"
     
@@ -39,29 +41,62 @@ def format_violations(results: List[ShitLintResult]) -> str:
 
 
 def generate_roast(results: List[ShitLintResult], context: str = "") -> str:
-    """Generate architectural roast. For now, just format violations."""
+    """Generate brutal architectural roast via LLM."""
     
     if not results:
-        return f"""
+        return _clean_code_response(context)
+    
+    # Try LLM first, fallback to static
+    if llm_roast := _try_llm_roast(results, context):
+        return llm_roast
+    
+    # Static fallback
+    return _static_roast(results, context)
+
+
+def _clean_code_response(context: str) -> str:
+    """Response for clean code."""
+    return f"""
 🤨 SUSPICIOUSLY CLEAN CODE DETECTED
 
-Either you're a fucking architectural genius, or you're hiding the bodies.
+Either you're an architectural genius, or you're hiding the bodies.
 
 Context: {context or 'Unknown codebase'}
 
 Possible explanations:
 1. You actually know what you're doing (unlikely)
-2. The code is too simple to fuck up (boring)
+2. The code is too simple to mess up (boring)
 3. You haven't written enough code yet (give it time)
 4. Our detection rules suck (probable)
 
 Recommendation: Write more code, then come back for proper roasting.
 """
+
+
+def _try_llm_roast(results: List[ShitLintResult], context: str) -> Optional[str]:
+    """Try LLM roasting with user-provided API keys."""
     
+    # Check for Gemini API key first (cheapest)
+    if gemini_key := os.getenv("GEMINI_API_KEY"):
+        return GeminiProvider(gemini_key).roast(results, context)
+    
+    # Check for OpenAI API key
+    if openai_key := os.getenv("OPENAI_API_KEY"):
+        return OpenAIProvider(openai_key).roast(results, context)
+    
+    # Check for Anthropic API key
+    if anthropic_key := os.getenv("ANTHROPIC_API_KEY"):
+        return AnthropicProvider(anthropic_key).roast(results, context)
+    
+    return None
+
+
+def _static_roast(results: List[ShitLintResult], context: str) -> str:
+    """Static roasting fallback."""
     violations_text = format_violations(results)
     
     return f"""
-🔥 ARCHITECTURAL ROAST SESSION
+🔥 ARCHITECTURAL ROAST SESSION (Static Fallback)
 
 Context: {context or 'Your beautiful disaster'}
 
@@ -75,10 +110,10 @@ DOCTRINE ANALYSIS:
 VERDICT: Your architecture needs therapy.
 
 Next steps:
-1. Delete half of this shit
+1. Delete half of this
 2. Simplify the other half  
 3. Question your life choices
 4. Repeat until maintainable
 
-TODO: Add actual LLM integration here (users provide their own keys)
+💡 Tip: Set GEMINI_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY for brutal LLM roasting
 """

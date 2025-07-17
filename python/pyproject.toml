@@ -34,8 +34,10 @@ tree-sitter = "^0.20.0"
 pathspec = "^0.11.0"
 pydantic = "^2.0.0"
 watchdog = "^3.0.0"
-cogency = {path = "../../cogency", develop = true}
 pytz = "^2025.2"
+openai = "^1.0.0"
+anthropic = "^0.25.0"
+google-generativeai = "^0.8.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.0.0"
