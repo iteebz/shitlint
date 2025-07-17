@@ -2,7 +2,7 @@
 
 **Your code is shit. Here's why.**
 
-ShitLint is the AI code reviewer that cuts through the fluff and calls out the architectural dumpster fires hiding in your codebase. No sugar, no fluff — just the cold, hard truth.
+ShitLint is the AI code reviewer that cuts through the fluff and calls out the architectural dumpster fires hiding in your codebase. Because sometimes, brutal honesty is what is needed, even when it hurts.
 
 ## Why ShitLint Exists
 

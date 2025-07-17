@@ -1,8 +1,9 @@
 """Clean roaster - no ceremony, proper separation."""
 
 import os
+import json
 from typing import List, Optional
-from .core import ShitLintResult
+from .core import ShitLintResult, AnalysisContext
 from .llm import OpenAIProvider, AnthropicProvider, GeminiProvider
 
 
@@ -40,18 +41,18 @@ def format_violations(results: List[ShitLintResult]) -> str:
     return "\n".join(output)
 
 
-def generate_roast(results: List[ShitLintResult], context: str = "") -> str:
+def generate_roast(results: List[ShitLintResult], context: str = "", analysis_context: Optional[AnalysisContext] = None) -> str:
     """Generate brutal architectural roast via LLM."""
     
     if not results:
         return _clean_code_response(context)
     
     # Try LLM first, fallback to static
-    if llm_roast := _try_llm_roast(results, context):
+    if llm_roast := _try_llm_roast(results, context, analysis_context):
         return llm_roast
     
     # Static fallback
-    return _static_roast(results, context)
+    return _static_roast(results, context, analysis_context)
 
 
 def _clean_code_response(context: str) -> str:
@@ -73,32 +74,38 @@ Recommendation: Write more code, then come back for proper roasting.
 """
 
 
-def _try_llm_roast(results: List[ShitLintResult], context: str) -> Optional[str]:
+def _try_llm_roast(results: List[ShitLintResult], context: str, analysis_context: Optional[AnalysisContext] = None) -> Optional[str]:
     """Try LLM roasting with user-provided API keys."""
     
     # Check for Gemini API key first (cheapest)
     if gemini_key := os.getenv("GEMINI_API_KEY"):
-        return GeminiProvider(gemini_key).roast(results, context)
+        return GeminiProvider(gemini_key).roast(results, context, analysis_context)
     
     # Check for OpenAI API key
     if openai_key := os.getenv("OPENAI_API_KEY"):
-        return OpenAIProvider(openai_key).roast(results, context)
+        return OpenAIProvider(openai_key).roast(results, context, analysis_context)
     
     # Check for Anthropic API key
     if anthropic_key := os.getenv("ANTHROPIC_API_KEY"):
-        return AnthropicProvider(anthropic_key).roast(results, context)
+        return AnthropicProvider(anthropic_key).roast(results, context, analysis_context)
     
     return None
 
 
-def _static_roast(results: List[ShitLintResult], context: str) -> str:
+def _static_roast(results: List[ShitLintResult], context: str, analysis_context: Optional[AnalysisContext] = None) -> str:
     """Static roasting fallback."""
     violations_text = format_violations(results)
+    
+    tree_info = ""
+    if analysis_context:
+        tree_info = f"\n📁 Structure: {analysis_context.file_count} files, {len(analysis_context.file_types)} types"
+        if analysis_context.naming_violations:
+            tree_info += f"\n🔤 Naming violations: {', '.join(analysis_context.naming_violations[:3])}"
     
     return f"""
 🔥 ARCHITECTURAL ROAST SESSION (Static Fallback)
 
-Context: {context or 'Your beautiful disaster'}
+Context: {context or 'Your beautiful disaster'}{tree_info}
 
 {violations_text}
 
