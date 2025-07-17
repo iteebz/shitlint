@@ -1,9 +1,8 @@
-"""Core ShitLint functionality."""
+"""Core ShitLint functionality - Heuristics + AST detection."""
 
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional
-
 from .rules import RuleEngine, Violation
 
 
@@ -19,14 +18,13 @@ class ShitLintResult:
 
 
 def analyze_code(path: Path) -> List[ShitLintResult]:
-    """Analyze code with deterministic rules."""
+    """Analyze code with heuristics + AST rules."""
     engine = RuleEngine()
     results = []
     
     if path.is_file() and path.suffix == '.py':
         violations = engine.analyze_file(path)
         results.extend(_violations_to_results(violations))
-    
     elif path.is_dir():
         # Recursively analyze all Python files
         for file_path in path.glob('**/*.py'):

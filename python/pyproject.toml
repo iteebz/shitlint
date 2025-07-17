@@ -34,6 +34,8 @@ tree-sitter = "^0.20.0"
 pathspec = "^0.11.0"
 pydantic = "^2.0.0"
 watchdog = "^3.0.0"
+cogency = {path = "../../cogency", develop = true}
+pytz = "^2025.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.0.0"
