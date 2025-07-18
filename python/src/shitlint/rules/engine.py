@@ -14,6 +14,7 @@ from .magic_rules import detect_magic_numbers
 from .abstraction_rules import detect_over_abstraction
 from .commit_rules import detect_commit_violations
 from .deps_rules import detect_dependency_violations
+from .docs_rules import detect_documentation_violations
 
 
 class RuleEngine:
@@ -36,6 +37,7 @@ class RuleEngine:
             detect_over_abstraction,
             detect_commit_violations,
             detect_dependency_violations,
+            detect_documentation_violations,
         ]
     
     def _get_brutality_thresholds(self, brutality: str) -> Dict:
