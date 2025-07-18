@@ -12,43 +12,42 @@ def format_violations(results: List[ShitLintResult]) -> str:
     if not results:
         return "No violations found. Suspiciously clean code... 🤔"
     
-    output = []
-    output.append(f"🚨 VIOLATIONS DETECTED ({len(results)} issues)")
-    output.append("")
+    output = [f"🚨 VIOLATIONS DETECTED ({len(results)} issues)", ""]
     
-    # Group by severity
-    brutal = [r for r in results if r.severity == "brutal"]
-    moderate = [r for r in results if r.severity == "moderate"]
-    gentle = [r for r in results if r.severity == "gentle"]
-    
-    if brutal:
-        output.append("💀 BRUTAL VIOLATIONS:")
-        for result in brutal:
-            output.append(f"  - {result.file_path}:{result.line_number or '?'} - {result.message}")
-        output.append("")
-    
-    if moderate:
-        output.append("⚠️  MODERATE VIOLATIONS:")
-        for result in moderate:
-            output.append(f"  - {result.file_path}:{result.line_number or '?'} - {result.message}")
-        output.append("")
-    
-    if gentle:
-        output.append("👀 GENTLE VIOLATIONS:")
-        for result in gentle:
-            output.append(f"  - {result.file_path}:{result.line_number or '?'} - {result.message}")
+    severity_groups = _group_by_severity(results)
+    for severity_data in severity_groups:
+        if severity_data["violations"]:
+            output.extend(_format_severity_section(severity_data))
     
     return "\n".join(output)
 
 
-def generate_roast(results: List[ShitLintResult], context: str = "", analysis_context: Optional[AnalysisContext] = None) -> str:
+def _group_by_severity(results: List[ShitLintResult]) -> List[dict]:
+    """Group violations by severity with display metadata."""
+    return [
+        {"name": "💀 BRUTAL VIOLATIONS:", "violations": [r for r in results if r.severity == "brutal"]},
+        {"name": "⚠️  MODERATE VIOLATIONS:", "violations": [r for r in results if r.severity == "moderate"]},
+        {"name": "👀 GENTLE VIOLATIONS:", "violations": [r for r in results if r.severity == "gentle"]}
+    ]
+
+
+def _format_severity_section(severity_data: dict) -> List[str]:
+    """Format a section for one severity level."""
+    section = [severity_data["name"]]
+    for result in severity_data["violations"]:
+        section.append(f"  - {result.file_path}:{result.line_number or '?'} - {result.message}")
+    section.append("")
+    return section
+
+
+def generate_roast(results: List[ShitLintResult], context: str = "", analysis_context: Optional[AnalysisContext] = None, config=None) -> str:
     """Generate brutal architectural roast via LLM."""
     
     if not results:
         return _clean_code_response(context)
     
     # Try LLM first, fallback to static
-    if llm_roast := _try_llm_roast(results, context, analysis_context):
+    if llm_roast := _try_llm_roast(results, context, analysis_context, config):
         return llm_roast
     
     # Static fallback
@@ -74,20 +73,41 @@ Recommendation: Write more code, then come back for proper roasting.
 """
 
 
-def _try_llm_roast(results: List[ShitLintResult], context: str, analysis_context: Optional[AnalysisContext] = None) -> Optional[str]:
+def _try_llm_roast(results: List[ShitLintResult], context: str, analysis_context: Optional[AnalysisContext] = None, config=None) -> Optional[str]:
     """Try LLM roasting with user-provided API keys."""
+    provider_preference = config.llm_provider if config else "auto"
     
-    # Check for Gemini API key first (cheapest)
-    if gemini_key := os.getenv("GEMINI_API_KEY"):
-        return GeminiProvider(gemini_key).roast(results, context, analysis_context)
+    if provider_preference != "auto":
+        return _try_specific_provider(provider_preference, results, context, analysis_context)
     
-    # Check for OpenAI API key
-    if openai_key := os.getenv("OPENAI_API_KEY"):
-        return OpenAIProvider(openai_key).roast(results, context, analysis_context)
+    return _try_auto_provider(results, context, analysis_context)
+
+
+def _try_specific_provider(provider: str, results: List[ShitLintResult], context: str, analysis_context: Optional[AnalysisContext]) -> Optional[str]:
+    """Try specific LLM provider."""
+    providers = {
+        "gemini": (GeminiProvider, "GEMINI_API_KEY"),
+        "openai": (OpenAIProvider, "OPENAI_API_KEY"), 
+        "anthropic": (AnthropicProvider, "ANTHROPIC_API_KEY")
+    }
     
-    # Check for Anthropic API key
-    if anthropic_key := os.getenv("ANTHROPIC_API_KEY"):
-        return AnthropicProvider(anthropic_key).roast(results, context, analysis_context)
+    if provider in providers:
+        provider_class, env_var = providers[provider]
+        if api_key := os.getenv(env_var):
+            return provider_class(api_key).roast(results, context, analysis_context)
+    
+    return None
+
+
+def _try_auto_provider(results: List[ShitLintResult], context: str, analysis_context: Optional[AnalysisContext]) -> Optional[str]:
+    """Auto-detect provider (cheapest first)."""
+    for provider_class, env_var in [
+        (GeminiProvider, "GEMINI_API_KEY"),
+        (OpenAIProvider, "OPENAI_API_KEY"),
+        (AnthropicProvider, "ANTHROPIC_API_KEY")
+    ]:
+        if api_key := os.getenv(env_var):
+            return provider_class(api_key).roast(results, context, analysis_context)
     
     return None
 

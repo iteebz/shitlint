@@ -1,0 +1,15 @@
+{
+  "brutality": "professional",
+  "ignore_patterns": [
+    "tests/",
+    "test_*.py",
+    "*_test.py",
+    ".venv/",
+    "node_modules/",
+    "dist/",
+    "build/"
+  ],
+  "max_file_size": 100000,
+  "llm_provider": "auto",
+  "custom_rules": {}
+}

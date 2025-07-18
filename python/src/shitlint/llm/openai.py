@@ -1,7 +1,7 @@
 """OpenAI provider."""
 
 from typing import List, Optional
-from .base import LLMProvider
+from .base import LLMProvider, LLMAuthError, LLMRateLimitError
 from ..core import ShitLintResult, AnalysisContext
 from .prompts import build_roast_prompt, format_violations
 
@@ -9,16 +9,25 @@ from .prompts import build_roast_prompt, format_violations
 class OpenAIProvider(LLMProvider):
     """OpenAI-powered roasting."""
     
-    def __init__(self, api_key: str):
-        self.api_key = api_key
+    @property
+    def provider_name(self) -> str:
+        return "OpenAI"
     
-    def roast(self, results: List[ShitLintResult], context: str, analysis_context: Optional[AnalysisContext] = None) -> str:
+    @property
+    def api_key_env_var(self) -> str:
+        return "OPENAI_API_KEY"
+    
+    @property
+    def install_command(self) -> str:
+        return "pip install openai"
+    
+    def _generate_roast(self, results: List[ShitLintResult], context: str, analysis_context: Optional[AnalysisContext] = None) -> str:
+        import openai
+        
+        client = openai.OpenAI(api_key=self.api_key)
+        violations = format_violations(results)
+        
         try:
-            import openai
-            
-            client = openai.OpenAI(api_key=self.api_key)
-            violations = format_violations(results)
-            
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": build_roast_prompt(violations, context, analysis_context)}],
@@ -31,6 +40,10 @@ class OpenAIProvider(LLMProvider):
             
             return f"{content}\n\n💸 OpenAI: {usage.prompt_tokens}+{usage.completion_tokens}={usage.total_tokens} tokens"
             
-        except Exception as e:
-            return f"🤖 OpenAI roasting failed: {str(e)}"
+        except openai.AuthenticationError as e:
+            raise LLMAuthError(f"Authentication failed: {e}")
+        except openai.RateLimitError as e:
+            raise LLMRateLimitError(f"Rate limit exceeded: {e}")
+        except Exception:
+            raise
     

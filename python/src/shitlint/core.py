@@ -28,7 +28,7 @@ class AnalysisContext:
     naming_violations: List[str]
 
 
-def analyze_code(path: Path) -> List[ShitLintResult]:
+def analyze_code(path: Path, config=None) -> List[ShitLintResult]:
     """Analyze code with heuristics + AST rules."""
     engine = RuleEngine()
     results = []
@@ -38,7 +38,7 @@ def analyze_code(path: Path) -> List[ShitLintResult]:
         results.extend(_violations_to_results(violations))
     elif path.is_dir():
         # Get all Python files first
-        python_files = list(_get_python_files(path))
+        python_files = list(_get_python_files(path, config))
         
         # Analyze each file
         for file_path in python_files:
@@ -48,7 +48,7 @@ def analyze_code(path: Path) -> List[ShitLintResult]:
     return results
 
 
-def get_analysis_context(path: Path) -> AnalysisContext:
+def get_analysis_context(path: Path, config=None) -> AnalysisContext:
     """Get full context for tree structure analysis."""
     if path.is_file():
         return AnalysisContext(
@@ -60,7 +60,7 @@ def get_analysis_context(path: Path) -> AnalysisContext:
     
     # Directory analysis
     tree = _build_tree_structure(path)
-    python_files = list(_get_python_files(path))
+    python_files = list(_get_python_files(path, config))
     
     file_types = {}
     for file_path in python_files:
@@ -77,13 +77,17 @@ def get_analysis_context(path: Path) -> AnalysisContext:
     )
 
 
-def _get_python_files(path: Path) -> List[Path]:
-    """Get all Python files, respecting .gitignore."""
-    spec = _load_gitignore_spec(path)
+def _get_python_files(path: Path, config=None) -> List[Path]:
+    """Get all Python files, respecting .gitignore and config."""
+    spec = _load_gitignore_spec(path, config)
     
     files = []
     for file_path in path.rglob('*.py'):
         if file_path.is_file():
+            # Skip files too large
+            if config and file_path.stat().st_size > config.max_file_size:
+                continue
+                
             # Get relative path for gitignore matching
             try:
                 rel_path = file_path.relative_to(path)
@@ -96,7 +100,7 @@ def _get_python_files(path: Path) -> List[Path]:
     return files
 
 
-def _load_gitignore_spec(path: Path) -> pathspec.PathSpec:
+def _load_gitignore_spec(path: Path, config=None) -> pathspec.PathSpec:
     """Load .gitignore patterns and create pathspec."""
     gitignore_patterns = []
     
@@ -115,6 +119,10 @@ def _load_gitignore_spec(path: Path) -> pathspec.PathSpec:
         'build/',
         '*.egg-info/',
     ])
+    
+    # Add config ignore patterns
+    if config and config.ignore_patterns:
+        gitignore_patterns.extend(config.ignore_patterns)
     
     # Read .gitignore if it exists
     gitignore_path = path / '.gitignore'
