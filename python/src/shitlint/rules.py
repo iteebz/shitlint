@@ -27,6 +27,7 @@ class RuleEngine:
             self._detect_import_ceremony,
             self._detect_duplicate_blocks,
             self._detect_complex_functions,
+            self._detect_naming_violations,
         ]
     
     def analyze_file(self, file_path: Path) -> List[Violation]:
@@ -172,5 +173,121 @@ class RuleEngine:
                         message=message,
                         context={"complexity": complexity, "lines": func_lines}
                     ))
+        
+        return violations
+    
+    def _detect_naming_violations(self, file_path: Path, content: str, tree: ast.AST) -> List[Violation]:
+        """Detect bullshit variable and function names."""
+        violations = []
+        
+        # Ceremony variable names that say nothing
+        ceremony_vars = {
+            'data', 'result', 'temp', 'obj', 'item', 'val', 'thing', 'stuff', 
+            'var', 'x', 'y', 'z', 'i', 'j', 'k', 'value', 'element', 'node',
+            'info', 'content', 'payload', 'response', 'request', 'params', 'args'
+        }
+        
+        # AI-generated monstrosities (too long)
+        max_reasonable_length = 25
+        
+        # Class name ceremony 
+        ceremony_classes = {
+            'Manager', 'Handler', 'Processor', 'Utility', 'Helper', 'Service',
+            'Factory', 'Builder', 'Provider', 'Controller', 'Adapter', 'Wrapper'
+        }
+        
+        class NameCollector(ast.NodeVisitor):
+            def __init__(self):
+                self.violations = []
+                self.current_function = None
+                
+            def visit_FunctionDef(self, node):
+                self.current_function = node.name
+                
+                # Check function parameters for ceremony
+                for arg in node.args.args:
+                    if arg.arg in ceremony_vars:
+                        self.violations.append(Violation(
+                            rule="ceremony_parameter",
+                            file_path=str(file_path),
+                            line_number=node.lineno,
+                            severity="moderate",
+                            message=f"Function '{node.name}' has ceremony parameter: '{arg.arg}' - be specific",
+                            context={"function": node.name, "parameter": arg.arg}
+                        ))
+                
+                # Check function name length (AI monstrosity)
+                if len(node.name) > max_reasonable_length:
+                    self.violations.append(Violation(
+                        rule="ai_generated_name",
+                        file_path=str(file_path),
+                        line_number=node.lineno,
+                        severity="moderate", 
+                        message=f"Function '{node.name}' looks AI-generated: {len(node.name)} chars - simplify",
+                        context={"function": node.name, "length": len(node.name)}
+                    ))
+                
+                self.generic_visit(node)
+                self.current_function = None
+                
+            def visit_ClassDef(self, node):
+                # Check for ceremony class names (substring match)
+                if any(ceremony in node.name for ceremony in ceremony_classes):
+                    self.violations.append(Violation(
+                        rule="ceremony_class",
+                        file_path=str(file_path),
+                        line_number=node.lineno,
+                        severity="moderate",
+                        message=f"Class '{node.name}' is ceremony bullshit - what does it actually do?",
+                        context={"class": node.name}
+                    ))
+                
+                # Check class name length
+                if len(node.name) > max_reasonable_length:
+                    self.violations.append(Violation(
+                        rule="ai_generated_name",
+                        file_path=str(file_path),
+                        line_number=node.lineno,
+                        severity="moderate",
+                        message=f"Class '{node.name}' looks AI-generated: {len(node.name)} chars - simplify",
+                        context={"class": node.name, "length": len(node.name)}
+                    ))
+                
+                self.generic_visit(node)
+                
+            def visit_Assign(self, node):
+                # Check variable assignments for ceremony
+                for target in node.targets:
+                    if isinstance(target, ast.Name):
+                        var_name = target.id
+                        
+                        if var_name in ceremony_vars:
+                            func_context = f" in {self.current_function}" if self.current_function else ""
+                            self.violations.append(Violation(
+                                rule="ceremony_variable",
+                                file_path=str(file_path),
+                                line_number=node.lineno,
+                                severity="gentle",
+                                message=f"Variable '{var_name}'{func_context} is ceremony - be descriptive",
+                                context={"variable": var_name, "function": self.current_function}
+                            ))
+                        
+                        # Check for AI monstrosities
+                        if len(var_name) > max_reasonable_length:
+                            func_context = f" in {self.current_function}" if self.current_function else ""
+                            self.violations.append(Violation(
+                                rule="ai_generated_name",
+                                file_path=str(file_path),
+                                line_number=node.lineno,
+                                severity="moderate",
+                                message=f"Variable '{var_name}'{func_context} looks AI-generated: {len(var_name)} chars",
+                                context={"variable": var_name, "length": len(var_name)}
+                            ))
+                
+                self.generic_visit(node)
+        
+        collector = NameCollector()
+        collector.visit(tree)
+        violations.extend(collector.violations)
         
         return violations

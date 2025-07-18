@@ -45,24 +45,26 @@ moderate: >10 complexity OR >50 lines  # "Getting complex"
 
 ### 5. Naming Violations (Working ✅)
 ```python
-# File-level patterns
-vague_names = {'utils', 'helpers', 'common', 'misc', 'stuff', 'base', 'core', 'main'}
+# AST visitor pattern - scans ALL names in code
+ceremony_vars = {'data', 'result', 'temp', 'obj', 'item', 'val', 'thing', 'params'}
+ceremony_classes = {'Manager', 'Handler', 'Processor', 'Service', 'Factory'}
+ai_monstrosities = len(name) > 25  # "AI-generated bullshit"
+
+# Captures:
+visit_FunctionDef()  # Function names + parameters  
+visit_ClassDef()     # Class names
+visit_Assign()       # Variable assignments
 ```
-**Validation:** Catches ceremony names, enforces descriptive naming
+**Validation:** Catches ceremony parameters, AI-generated names, vague classes
 
 ## LLM Prompt Engineering Status
 
-### Current Prompt (Needs CLAUDE.md Alignment)
-- Generic code review language
-- Missing CLAUDE.md specific terminology
-- Not aggressive enough about ceremony
-- Doesn't emphasize "beautiful code" criteria
-
-### Target Improvements
-- Use CLAUDE.md vocabulary ("ceremony", "bullshit", "beautiful")
-- Reference specific violations against doctrine
-- More aggressive about deletion recommendations
-- Emphasize "Zero Line Philosophy"
+### Current Prompt (Fixed ✅)
+- BRUTAL, scannable format - violations FRONT AND CENTER
+- Rich markup for terminal colors ([red], [yellow], [bold])
+- Direct action commands: "DELETE THIS", "FIX THIS", "REFACTOR"
+- No verbose explanations - just brutal facts
+- Both LLM and static fallback use same format
 
 ## Known Gaps & Next Targets
 
@@ -73,9 +75,9 @@ vague_names = {'utils', 'helpers', 'common', 'misc', 'stuff', 'base', 'core', 'm
 4. **Wheel reinvention** - Custom parsers when stdlib exists
 
 ### Current Validation Issues
-1. **False positives:** Small files flagged for having imports
+1. **False positives:** Small files flagged for having imports  
 2. **Missing context:** Can't detect tight coupling across modules
-3. **Prompt quality:** LLM output doesn't match CLAUDE.md style
+3. **Loop variables:** `i`, `j`, `k` flagged as ceremony (maybe acceptable in loops)
 
 ## Algorithm Evolution
 
@@ -104,10 +106,11 @@ vague_names = {'utils', 'helpers', 'common', 'misc', 'stuff', 'base', 'core', 'm
 
 ### Current Self-Test Results
 ```bash
-# Known violations in our own code:
-- roaster.py:format_violations (11 branches, 26 lines) ✅ Valid
-- core.py naming violation ✅ Valid  
-- Multiple __init__.py files ✅ Valid
+# Our own code is now clean:
+poetry run python -c "from src.shitlint.core import analyze_code..."
+🤨 SUSPICIOUSLY CLEAN CODE DETECTED
+# All complexity violations fixed ✅
+# No ceremony naming violations ✅
 ```
 
 ## Success Metrics
@@ -117,7 +120,7 @@ vague_names = {'utils', 'helpers', 'common', 'misc', 'stuff', 'base', 'core', 'm
 - **Actionability:** Clear refactoring recommendations
 
 ## Next Algorithm Improvements
-1. **Prompt engineering** - Align LLM with CLAUDE.md style
-2. **Cross-file analysis** - Detect DRY violations across modules
-3. **Abstraction detection** - Flag unnecessary wrapper classes
-4. **Performance** - Optimize for large codebases
+1. **Cross-file analysis** - Detect DRY violations across modules
+2. **Abstraction detection** - Flag unnecessary wrapper classes  
+3. **Performance** - Optimize for large codebases
+4. **Loop context** - Don't flag `i`, `j`, `k` in actual loops
