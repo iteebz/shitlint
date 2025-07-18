@@ -113,34 +113,51 @@ def _try_auto_provider(results: List[ShitLintResult], context: str, analysis_con
 
 
 def _static_roast(results: List[ShitLintResult], context: str, analysis_context: Optional[AnalysisContext] = None) -> str:
-    """Static roasting fallback."""
-    violations_text = format_violations(results)
+    """Static roasting fallback - BRUTAL and scannable."""
     
-    tree_info = ""
+    # Group violations by severity
+    brutal = [r for r in results if r.severity == "brutal"]
+    moderate = [r for r in results if r.severity == "moderate"]
+    gentle = [r for r in results if r.severity == "gentle"]
+    
+    output = ["🚨 BULLSHIT DETECTED - IMMEDIATE ACTION REQUIRED", ""]
+    
+    # Critical violations first
+    if brutal:
+        output.append("🔥 CRITICAL BULLSHIT:")
+        for r in brutal:
+            output.append(f"- {r.file_path}:{r.line_number or '?'} - {r.message} - DELETE THIS")
+        output.append("")
+    
+    # Moderate violations 
+    if moderate:
+        output.append("⚠️  CEREMONY DETECTED:")
+        for r in moderate:
+            output.append(f"- {r.file_path}:{r.line_number or '?'} - {r.message} - FIX THIS")
+        output.append("")
+    
+    # Gentle violations
+    if gentle:
+        output.append("👀 IMPROVEMENT NEEDED:")
+        for r in gentle:
+            output.append(f"- {r.file_path}:{r.line_number or '?'} - {r.message} - REFACTOR")
+        output.append("")
+    
+    # Quick context
     if analysis_context:
-        tree_info = f"\n📁 Structure: {analysis_context.file_count} files, {len(analysis_context.file_types)} types"
+        output.append(f"📁 Context: {context} ({analysis_context.file_count} files)")
         if analysis_context.naming_violations:
-            tree_info += f"\n🔤 Naming violations: {', '.join(analysis_context.naming_violations[:3])}"
+            output.append(f"🔤 Naming: {', '.join(analysis_context.naming_violations[:2])}")
+        output.append("")
     
-    return f"""
-🔥 ARCHITECTURAL ROAST SESSION (Static Fallback)
-
-Context: {context or 'Your beautiful disaster'}{tree_info}
-
-{violations_text}
-
-DOCTRINE ANALYSIS:
-- Clarity over cleverness: Your code chose cleverness, lost clarity
-- Simplicity over sophistication: You built a Rube Goldberg machine
-- Directness over indirection: More layers than a wedding cake
-
-VERDICT: Your architecture needs therapy.
-
-Next steps:
-1. Delete half of this
-2. Simplify the other half  
-3. Question your life choices
-4. Repeat until maintainable
-
-💡 Tip: Set GEMINI_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY for brutal LLM roasting
-"""
+    # Actions
+    output.extend([
+        "IMMEDIATE ACTIONS:",
+        "1. Fix CRITICAL violations first",  
+        "2. Eliminate ceremony",
+        "3. Apply Zero Line Philosophy",
+        "",
+        "💡 Set GEMINI_API_KEY for brutal LLM roasting"
+    ])
+    
+    return "\n".join(output)
