@@ -1,5 +1,5 @@
 """ShitLint rule engine and violation detection."""
 
-from .engine import RuleEngine, Violation
+from .base import Violation
 
-__all__ = ["RuleEngine", "Violation"]
+__all__ = ["Violation"]

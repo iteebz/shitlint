@@ -4,17 +4,17 @@ from pathlib import Path
 from typing import List, Dict
 import ast
 
-from .base import Violation
-from .file_rules import detect_giant_files
-from .import_rules import detect_import_ceremony
-from .function_rules import detect_complex_functions, detect_parameter_hell
-from .naming_rules import detect_naming_violations
-from .duplicate_rules import detect_duplicate_blocks, CrossFileAnalyzer
-from .magic_rules import detect_magic_numbers
-from .abstraction_rules import detect_over_abstraction
-from .commit_rules import detect_commit_violations
-from .deps_rules import detect_dependency_violations
-from .docs_rules import detect_documentation_violations
+from .rules.base import Violation
+from .rules.files import detect_giant_files
+from .rules.imports import detect_import_ceremony
+from .rules.functions import detect_complex_functions, detect_parameter_hell
+from .rules.naming import detect_naming_violations
+from .rules.duplicates import detect_duplicate_blocks, CrossFileAnalyzer
+from .rules.magic import detect_magic_numbers
+from .rules.abstraction import detect_over_abstraction
+from .rules.commits import detect_commit_violations
+from .rules.deps import detect_dependency_violations
+from .rules.docs import detect_documentation_violations
 
 
 class RuleEngine:

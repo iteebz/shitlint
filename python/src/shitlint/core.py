@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Dict, Any
 import pathspec
-from .rules import RuleEngine
+from .engine import RuleEngine
 from .rules.base import Violation
 
 
