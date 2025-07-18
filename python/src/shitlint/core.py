@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Dict, Any
 import pathspec
-from .rules import RuleEngine, Violation
+from .rules import RuleEngine
+from .rules.base import Violation
 
 
 @dataclass
@@ -41,10 +42,14 @@ def analyze_code(path: Path, config=None) -> List[ShitLintResult]:
         # Get all Python files first
         python_files = list(_get_python_files(path, config))
         
-        # Analyze each file
+        # Analyze each file (collects cross-file patterns)
         for file_path in python_files:
             violations = engine.analyze_file(file_path)
             results.extend(_violations_to_results(violations))
+        
+        # Generate cross-file violations after analyzing all files
+        cross_file_violations = engine.get_cross_file_violations()
+        results.extend(_violations_to_results(cross_file_violations))
     
     return results
 

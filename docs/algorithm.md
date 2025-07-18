@@ -57,6 +57,15 @@ visit_Assign()       # Variable assignments
 ```
 **Validation:** Catches ceremony parameters, AI-generated names, vague classes
 
+### 6. Cross-File Duplicates (Working ✅)
+```python
+# Structural similarity detection via AST normalization
+# Replaces variable names with placeholders: VAR_0, VAR_1, PARAM_0
+# Generates MD5 hash of normalized function structure
+# Groups identical structures across files
+```
+**Validation:** Catches copy-paste with different variable names across modules
+
 ## LLM Prompt Engineering Status
 
 ### Current Prompt (Fixed ✅)
@@ -69,10 +78,10 @@ visit_Assign()       # Variable assignments
 ## Known Gaps & Next Targets
 
 ### High-Impact Additions
-1. **Cross-file DRY violations** - Detect identical patterns across files
-2. **Abstraction bullshit** - Wrapper classes with no value
-3. **Over-engineering detection** - Abstract base classes adding complexity
-4. **Wheel reinvention** - Custom parsers when stdlib exists
+1. **Parameter hell** - Functions with 6+ parameters (ceremony overload)
+2. **Magic numbers** - Hardcoded values without constants
+3. **Abstraction bullshit** - Wrapper classes with no value
+4. **Over-engineering detection** - Abstract base classes adding complexity
 
 ### Current Validation Issues
 1. **False positives:** Small files flagged for having imports  
