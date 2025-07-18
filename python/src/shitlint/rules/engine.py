@@ -13,6 +13,7 @@ from .duplicate_rules import detect_duplicate_blocks, CrossFileAnalyzer
 from .magic_rules import detect_magic_numbers
 from .abstraction_rules import detect_over_abstraction
 from .commit_rules import detect_commit_violations
+from .deps_rules import detect_dependency_violations
 
 
 class RuleEngine:
@@ -34,6 +35,7 @@ class RuleEngine:
             detect_magic_numbers,
             detect_over_abstraction,
             detect_commit_violations,
+            detect_dependency_violations,
         ]
     
     def _get_brutality_thresholds(self, brutality: str) -> Dict:
