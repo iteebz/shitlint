@@ -1,5 +1,10 @@
 # ShitLint 💩🔍
 
+[![PyPI version](https://badge.fury.io/py/shitlint.svg)](https://badge.fury.io/py/shitlint)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Downloads](https://pepy.tech/badge/shitlint)](https://pepy.tech/project/shitlint)
+
 **Your code is shit. Here's why.**
 
 ShitLint is the AI code reviewer that cuts through the fluff and calls out the architectural dumpster fires hiding in your codebase. No sugar, no fluff — just the cold, hard truth.

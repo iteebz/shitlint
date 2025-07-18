@@ -45,8 +45,6 @@ VERDICT: Your code looks like it was written during a earthquake
 ## Installation
 
 ```bash
-npm install -g shitlint
-# or
 pip install shitlint
 # or just clone this repo and suffer with the rest of us
 ```
@@ -60,32 +58,40 @@ shitlint .
 # Scan specific file
 shitlint path/to/your/disaster.py
 
-# Get roasted in real-time
-shitlint --watch ./src
-
 # Extra brutal mode (not recommended for sensitive developers)
-shitlint --brutal ./src
+shitlint --brutality brutal ./src
+
+# Professional roasting (default)
+shitlint --brutality professional ./src
+
+# Gentle nudging (for beginners)
+shitlint --brutality gentle ./src
 ```
 
 ## Configuration
 
-Create a `.shitlint.json` file to customize how brutally honest you want the feedback:
+Create a `.shitlint/config.json` file to customize how brutally honest you want the feedback:
 
 ```json
 {
-  "brutality": "gordon-ramsay",
-  "roast_level": "professional-chef",
-  "ignore_patterns": ["legacy/*", "vendor/*"],
-  "custom_insults": true
+  "brutality": "brutal",
+  "ignore_patterns": ["tests/", "*.generated.py"],
+  "max_file_size": 100000,
+  "llm_provider": "auto"
 }
+```
+
+Or use the init command:
+```bash
+shitlint --init
 ```
 
 ## Language Support
 
 - Python ✅ (your FastAPI spaghetti)
-- JavaScript ✅ (your React component soup)
-- TypeScript ✅ (your over-engineered type gymnastics)
-- Go ✅ (your "simple" microservice that imports 47 packages)
+- JavaScript ⏳ (your React component soup - coming soon)
+- TypeScript ⏳ (your over-engineered type gymnastics - coming soon)
+- Go ⏳ (your "simple" microservice that imports 47 packages - coming soon)
 - More languages coming (unfortunately)
 
 ## FAQ
@@ -113,6 +119,7 @@ Found a new way code can be terrible? We'd love to hear about it.
 
 ## Roadmap
 
+- [ ] JavaScript/TypeScript support (so you can be roasted in more languages)
 - [ ] Integration with popular IDEs (so you can be roasted in real-time)
 - [ ] Team dashboard (shame your colleagues publicly)
 - [ ] AI-generated refactoring suggestions (because apparently you need help)
