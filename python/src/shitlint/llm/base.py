@@ -51,6 +51,26 @@ class LLMProvider(ABC):
         """Generate roast - implement in subclass."""
         pass
     
+    def _generate_simple(self, prompt: str) -> str:
+        """Generate simple response from prompt."""
+        # Default implementation - subclasses can override
+        import google.generativeai as genai
+        
+        genai.configure(api_key=self.api_key)
+        model = genai.GenerativeModel("gemini-2.0-flash-exp")
+        
+        try:
+            response = model.generate_content(
+                prompt,
+                generation_config=genai.types.GenerationConfig(
+                    max_output_tokens=2000,
+                    temperature=0.7
+                )
+            )
+            return response.text
+        except Exception as e:
+            raise Exception(f"Simple generation failed: {e}")
+    
     @property
     @abstractmethod
     def provider_name(self) -> str:
