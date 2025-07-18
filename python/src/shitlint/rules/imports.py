@@ -19,6 +19,7 @@ def detect_import_ceremony(file_path: Path, content: str, tree: ast.AST, thresho
         if isinstance(node, ast.Import):
             imports.extend([alias.name for alias in node.names])
         elif isinstance(node, ast.ImportFrom):
+            # Count each individual import from the module
             imports.extend([alias.name for alias in node.names])
     
     import_count = len(imports)

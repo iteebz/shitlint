@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "shitlint"
-version = "0.0.1"
+version = "0.1.0"
 description = "Your code is shit. Here's why."
 authors = ["Tyson Chan <tyson.chan@proton.me>"]
 license = "MIT"

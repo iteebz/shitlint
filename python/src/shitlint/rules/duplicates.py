@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import List, Dict
 import ast
 import hashlib
+import copy
 
 from .base import Violation
 
@@ -18,7 +19,9 @@ def detect_duplicate_blocks(file_path: Path, content: str, tree: ast.AST, thresh
     
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef):
-            func_hash = hashlib.md5(ast.dump(node).encode()).hexdigest()
+            # Normalize function structure for comparison
+            normalized = _normalize_function_structure(node)
+            func_hash = hashlib.md5(normalized.encode()).hexdigest()
             functions.append((node.name, node.lineno, func_hash))
     
     # Find duplicates
@@ -44,6 +47,44 @@ def detect_duplicate_blocks(file_path: Path, content: str, tree: ast.AST, thresh
             ))
     
     return violations
+
+
+def _normalize_function_structure(node: ast.FunctionDef) -> str:
+    """Extract structural fingerprint, ignoring variable names."""
+    
+    class StructureNormalizer(ast.NodeTransformer):
+        def __init__(self):
+            self.var_counter = 0
+            self.var_map = {}
+        
+        def visit_Name(self, node):
+            if isinstance(node.ctx, ast.Store):
+                # Variable assignment - normalize variable names
+                if node.id not in self.var_map:
+                    self.var_map[node.id] = f"var_{self.var_counter}"
+                    self.var_counter += 1
+                node.id = self.var_map[node.id]
+            elif isinstance(node.ctx, ast.Load):
+                # Variable usage - use normalized name if available
+                if node.id in self.var_map:
+                    node.id = self.var_map[node.id]
+            return node
+            
+        def visit_arg(self, node):
+            # Normalize parameter names
+            if node.arg not in self.var_map:
+                self.var_map[node.arg] = f"param_{len(self.var_map)}"
+            node.arg = self.var_map[node.arg]
+            return node
+            
+        def visit_FunctionDef(self, node):
+            # Normalize function name
+            node.name = "func"
+            return self.generic_visit(node)
+    
+    normalizer = StructureNormalizer()
+    normalized_node = normalizer.visit(copy.deepcopy(node))
+    return ast.dump(normalized_node)
 
 
 class CrossFileAnalyzer:
@@ -73,38 +114,7 @@ class CrossFileAnalyzer:
     
     def _normalize_function_structure(self, node: ast.FunctionDef) -> str:
         """Extract structural fingerprint, ignoring variable names."""
-        
-        class StructureNormalizer(ast.NodeTransformer):
-            def __init__(self):
-                self.var_counter = 0
-                self.var_map = {}
-            
-            def visit_Name(self, node):
-                if node.id not in self.var_map:
-                    self.var_map[node.id] = f"VAR_{self.var_counter}"
-                    self.var_counter += 1
-                node.id = self.var_map[node.id]
-                return node
-            
-            def visit_arg(self, node):
-                if node.arg not in self.var_map:
-                    self.var_map[node.arg] = f"PARAM_{len(self.var_map)}"
-                node.arg = self.var_map[node.arg]
-                return node
-        
-        # Clone and normalize
-        normalized = StructureNormalizer().visit(ast.copy_location(
-            ast.FunctionDef(
-                name="FUNC",
-                args=node.args,
-                body=node.body,
-                decorator_list=[],
-                returns=None,
-                type_comment=None
-            ), node
-        ))
-        
-        return hashlib.md5(ast.dump(normalized, annotate_fields=False).encode()).hexdigest()
+        return _normalize_function_structure(node)
     
     def get_violations(self) -> List[Violation]:
         """Generate violations for cross-file duplicates."""

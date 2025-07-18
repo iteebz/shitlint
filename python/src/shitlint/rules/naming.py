@@ -121,6 +121,24 @@ def detect_naming_violations(file_path: Path, content: str, tree: ast.AST, thres
                         ))
             
             self.generic_visit(node)
+            
+        def visit_For(self, node):
+            """Check for ceremony loop variables."""
+            if isinstance(node.target, ast.Name):
+                var_name = node.target.id
+                
+                if var_name in ceremony_vars and enable_loop_check:
+                    func_context = f" in {self.current_function}" if self.current_function else ""
+                    self.violations.append(Violation(
+                        rule="ceremony_variable",
+                        file_path=str(file_path),
+                        line_number=node.lineno,
+                        severity="gentle",
+                        message=f"Loop variable '{var_name}'{func_context} is ceremony - be descriptive",
+                        context={"variable": var_name, "function": self.current_function}
+                    ))
+            
+            self.generic_visit(node)
     
     collector = NameCollector()
     collector.visit(tree)

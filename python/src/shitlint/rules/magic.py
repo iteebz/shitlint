@@ -50,7 +50,9 @@ def detect_magic_numbers(file_path: Path, content: str, tree: ast.AST, threshold
                     '/' in node.value and len(node.value) > 10,  # file paths
                     node.value.endswith(('.json', '.yaml', '.yml', '.xml', '.csv')),
                     '@' in node.value and '.' in node.value,  # emails
-                    any(keyword in node.value.lower() for keyword in ['password', 'secret', 'key', 'token'])
+                    any(keyword in node.value.lower() for keyword in ['password', 'secret', 'key', 'token']),
+                    node.value.startswith(('sk_', 'pk_', 'api_')),  # API keys
+                    len(node.value) > 20 and node.value.replace('_', '').isalnum()  # Long alphanumeric strings
                 ]
                 
                 if any(suspicious_patterns):

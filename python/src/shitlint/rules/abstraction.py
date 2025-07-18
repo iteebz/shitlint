@@ -34,7 +34,10 @@ def detect_over_abstraction(file_path: Path, content: str, tree: ast.AST, thresh
                 
                 # Check for abstract methods (only raise NotImplementedError)
                 if len(method.body) == 1 and isinstance(method.body[0], ast.Raise):
-                    if isinstance(method.body[0].exc, ast.Name) and method.body[0].exc.id == 'NotImplementedError':
+                    exc = method.body[0].exc
+                    if isinstance(exc, ast.Name) and exc.id == 'NotImplementedError':
+                        class_info[node.name]['abstract_methods'].append(method.name)
+                    elif isinstance(exc, ast.Call) and isinstance(exc.func, ast.Name) and exc.func.id == 'NotImplementedError':
                         class_info[node.name]['abstract_methods'].append(method.name)
                 
                 # Check for pure delegation
@@ -46,7 +49,7 @@ def detect_over_abstraction(file_path: Path, content: str, tree: ast.AST, thresh
         node = info['node']
         
         # 1. God abstractions - too many abstract methods
-        if len(info['abstract_methods']) >= 15:
+        if len(info['abstract_methods']) >= 10:
             violations.append(Violation(
                 rule="god_abstraction",
                 file_path=str(file_path),
@@ -57,7 +60,7 @@ def detect_over_abstraction(file_path: Path, content: str, tree: ast.AST, thresh
             ))
         
         # 2. Wrapper hell - classes that mostly delegate
-        if info['total_methods'] > 2 and info['delegation_methods'] >= info['total_methods'] * 0.8:
+        if info['total_methods'] > 1 and info['delegation_methods'] >= info['total_methods'] * 0.7:
             violations.append(Violation(
                 rule="wrapper_hell",
                 file_path=str(file_path),
@@ -100,7 +103,7 @@ def detect_over_abstraction(file_path: Path, content: str, tree: ast.AST, thresh
             ))
         
         # 5. Interface overkill - abstract class with only one concrete implementation
-        if info['abstract_methods'] and len(info['abstract_methods']) > 2:
+        if info['abstract_methods'] and len(info['abstract_methods']) >= 3:
             # This would need cross-file analysis to be fully accurate
             # For now, flag classes with many abstract methods in single file
             violations.append(Violation(
