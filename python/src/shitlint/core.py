@@ -30,7 +30,8 @@ class AnalysisContext:
 
 def analyze_code(path: Path, config=None) -> List[ShitLintResult]:
     """Analyze code with heuristics + AST rules."""
-    engine = RuleEngine()
+    brutality = config.brutality if config else "professional"
+    engine = RuleEngine(brutality=brutality)
     results = []
     
     if path.is_file() and path.suffix == '.py':

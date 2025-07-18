@@ -21,7 +21,8 @@ class Violation:
 class RuleEngine:
     """Apply deterministic rules to detect code violations."""
     
-    def __init__(self):
+    def __init__(self, brutality: str = "professional"):
+        self.brutality = brutality
         self.rules = [
             self._detect_giant_files,
             self._detect_import_ceremony,
@@ -29,6 +30,42 @@ class RuleEngine:
             self._detect_complex_functions,
             self._detect_naming_violations,
         ]
+        
+        # Brutality-based thresholds
+        self.thresholds = self._get_brutality_thresholds(brutality)
+    
+    def _get_brutality_thresholds(self, brutality: str) -> Dict:
+        """Get detection thresholds based on brutality level."""
+        if brutality == "brutal":
+            # Harsh - catch everything
+            return {
+                "file_lines": {"gentle": 150, "moderate": 200, "brutal": 300},
+                "imports": {"moderate": 10, "brutal": 15},
+                "complexity": {"moderate": 8, "brutal": 12},
+                "function_lines": {"moderate": 30, "brutal": 50},
+                "name_length": 20,
+                "enable_loop_var_check": True
+            }
+        elif brutality == "gentle":
+            # Relaxed - only catch obvious problems
+            return {
+                "file_lines": {"gentle": 300, "moderate": 500, "brutal": 800},
+                "imports": {"moderate": 20, "brutal": 35},
+                "complexity": {"moderate": 15, "brutal": 25},
+                "function_lines": {"moderate": 80, "brutal": 120},
+                "name_length": 35,
+                "enable_loop_var_check": False
+            }
+        else:  # professional (default)
+            # Balanced - current thresholds
+            return {
+                "file_lines": {"gentle": 200, "moderate": 300, "brutal": 500},
+                "imports": {"moderate": 15, "brutal": 25},
+                "complexity": {"moderate": 10, "brutal": 15},
+                "function_lines": {"moderate": 50, "brutal": 80},
+                "name_length": 25,
+                "enable_loop_var_check": False
+            }
     
     def analyze_file(self, file_path: Path) -> List[Violation]:
         """Run all rules against a file."""
@@ -52,13 +89,15 @@ class RuleEngine:
         lines = [line for line in content.split('\n') if line.strip()]
         line_count = len(lines)
         
-        if line_count < 200:
+        thresholds = self.thresholds["file_lines"]
+        
+        if line_count < thresholds["gentle"]:
             return []
         
-        if line_count >= 500:
+        if line_count >= thresholds["brutal"]:
             severity = "brutal"
             message = f"War crime detected: {line_count} lines of architectural violence"
-        elif line_count >= 300:
+        elif line_count >= thresholds["moderate"]:
             severity = "moderate" 
             message = f"Novel detected: {line_count} lines of unnecessary complexity"
         else:
@@ -86,10 +125,12 @@ class RuleEngine:
         
         import_count = len(imports)
         
-        if import_count < 15:
+        thresholds = self.thresholds["imports"]
+        
+        if import_count < thresholds["moderate"]:
             return []
         
-        if import_count >= 25:
+        if import_count >= thresholds["brutal"]:
             severity = "brutal"
             message = f"Import addiction detected: {import_count} dependencies is architectural heroin"
         else:
@@ -157,8 +198,11 @@ class RuleEngine:
                 # Count lines in function
                 func_lines = len([line for line in content.split('\n')[node.lineno-1:node.end_lineno] if line.strip()])
                 
-                if complexity > 10 or func_lines > 50:
-                    if complexity > 15 or func_lines > 80:
+                complexity_thresholds = self.thresholds["complexity"]
+                line_thresholds = self.thresholds["function_lines"]
+                
+                if complexity > complexity_thresholds["moderate"] or func_lines > line_thresholds["moderate"]:
+                    if complexity > complexity_thresholds["brutal"] or func_lines > line_thresholds["brutal"]:
                         severity = "brutal"
                         message = f"Function '{node.name}' is a complexity nightmare: {complexity} branches, {func_lines} lines"
                     else:
@@ -188,7 +232,8 @@ class RuleEngine:
         }
         
         # AI-generated monstrosities (too long)
-        max_reasonable_length = 25
+        max_reasonable_length = self.thresholds["name_length"]
+        enable_loop_var_check = self.thresholds["enable_loop_var_check"]
         
         # Class name ceremony 
         ceremony_classes = {
@@ -262,6 +307,10 @@ class RuleEngine:
                         var_name = target.id
                         
                         if var_name in ceremony_vars:
+                            # Skip loop variables unless brutal mode
+                            if not enable_loop_var_check and var_name in {'i', 'j', 'k', 'x', 'y', 'z'}:
+                                continue
+                                
                             func_context = f" in {self.current_function}" if self.current_function else ""
                             self.violations.append(Violation(
                                 rule="ceremony_variable",
