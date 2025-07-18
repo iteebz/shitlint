@@ -32,10 +32,10 @@ class AnalysisContext:
 def analyze_code(path: Path, config=None) -> List[ShitLintResult]:
     """Analyze code with heuristics + AST rules."""
     brutality = config.brutality if config else "professional"
-    engine = RuleEngine(brutality=brutality)
+    engine = RuleEngine(brutality=brutality, config=config.__dict__ if config else None)
     results = []
     
-    if path.is_file() and path.suffix == '.py':
+    if path.is_file():
         violations = engine.analyze_file(path)
         results.extend(_violations_to_results(violations))
     elif path.is_dir():
@@ -44,6 +44,12 @@ def analyze_code(path: Path, config=None) -> List[ShitLintResult]:
         
         # Analyze each file (collects cross-file patterns)
         for file_path in python_files:
+            violations = engine.analyze_file(file_path)
+            results.extend(_violations_to_results(violations))
+        
+        # Also analyze documentation files
+        doc_files = list(_get_doc_files(path, config))
+        for file_path in doc_files:
             violations = engine.analyze_file(file_path)
             results.extend(_violations_to_results(violations))
         
@@ -102,6 +108,31 @@ def _get_python_files(path: Path, config=None) -> List[Path]:
             except ValueError:
                 # File is outside the root path
                 continue
+    
+    return files
+
+
+def _get_doc_files(path: Path, config=None) -> List[Path]:
+    """Get all documentation files, respecting .gitignore and config."""
+    spec = _load_gitignore_spec(path, config)
+    
+    files = []
+    doc_patterns = ['*.md', '*.rst', '*.txt']
+    for pattern in doc_patterns:
+        for file_path in path.rglob(pattern):
+            if file_path.is_file():
+                # Skip files too large
+                if config and file_path.stat().st_size > config.max_file_size:
+                    continue
+                    
+                # Get relative path for gitignore matching
+                try:
+                    rel_path = file_path.relative_to(path)
+                    if not spec.match_file(str(rel_path)):
+                        files.append(file_path)
+                except ValueError:
+                    # File is outside the root path
+                    continue
     
     return files
 

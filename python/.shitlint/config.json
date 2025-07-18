@@ -11,5 +11,18 @@
   ],
   "max_file_size": 100000,
   "llm_provider": "auto",
-  "custom_rules": {}
+  "custom_rules": {},
+  "enabled_rules": {
+    "giant_files": false,
+    "import_ceremony": false,
+    "duplicate_blocks": false,
+    "complex_functions": false,
+    "parameter_hell": false,
+    "naming_violations": false,
+    "magic_numbers": false,
+    "over_abstraction": false,
+    "commit_violations": false,
+    "dependency_violations": false,
+    "documentation_violations": true
+  }
 }

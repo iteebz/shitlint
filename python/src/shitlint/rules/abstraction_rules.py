@@ -11,6 +11,10 @@ def detect_over_abstraction(file_path: Path, content: str, tree: ast.AST, thresh
     """Detect unnecessary abstraction layers and architectural bloat."""
     violations = []
     
+    # Skip if not a Python file
+    if tree is None:
+        return violations
+    
     # Track inheritance chains and class relationships
     class_info = {}
     for node in ast.walk(tree):

@@ -43,7 +43,7 @@
 - Pointless factory: Single create() method with simple instantiation
 - Interface overkill: Abstract classes with many methods
 
-### 9. Commit Message Violations ✅ NEW
+### 9. Commit Message Violations ✅ 
 - **Intelligent Detection:** Skips good conventional commits (`feat: meaningful description`)
 - **Garbage Patterns:**
   - Single word laziness: "fix", "update", "wip", "temp", "asdf"
@@ -54,10 +54,25 @@
 - **Smart Analysis:** Length + context + meaningful words detection
 - **Git Integration:** Analyzes last 20 commits via `git log`
 
+### 10. Dependencies Audit ✅ NEW
+- **Multi-Format Support:** package.json, requirements.txt, pyproject.toml
+- **Bloat Detection:** ≥50 deps = dependency hell, ≥25 deps = package bloat
+- **Left-pad Syndrome:** Flags micro-deps like 'left-pad', 'is-odd', 'six', 'typing-extensions'
+- **Ecosystem Aware:** Different rules for npm vs pip packages
+- **Zero Configuration:** Auto-discovers dependency files from project root
+
+### 11. Documentation Audit ✅ NEW
+- **Lazy Placeholder Detection:** "TODO: write docs", "Coming soon", "Under construction"
+- **Dead Link Detection:** Suspicious domains (localhost, example.com, test.com)
+- **Outdated Versions:** Python 2.x, old Node versions, beta/alpha/rc references
+- **Empty README:** <100 chars = brutal violation
+- **Broken Markdown:** Malformed anchor links and references
+- **Auto-Discovery:** Scans README files and docs/ directory
+
 ## Architecture Features ✅
 
 ### Rule Engine
-- 9 pluggable detection functions
+- 11 pluggable detection functions
 - 3 brutality levels: brutal/professional/gentle
 - AST parsing + cross-file analysis
 - Configurable thresholds per rule
@@ -81,7 +96,15 @@
 - Ignore patterns (respects .gitignore)
 - Max file size limits
 
-## Next Up 🔥
-- **Dependencies Audit:** package.json/requirements.txt parsing for bloat detection
-- **Documentation Audit:** README analysis for dead links, outdated content
-- **Memory Foundation:** Track patterns over time (Phase 2)
+## v0.1.0 Complete! 🔥
+All core features implemented:
+- ✅ 11 detection rules covering files, functions, imports, naming, dependencies, docs, commits
+- ✅ 3 brutality levels with configurable thresholds
+- ✅ LLM integration with rich markup
+- ✅ CLI tool with flexible scanning
+- ✅ Cross-file analysis and AST parsing
+
+## Next Up (Phase 2) 🚀
+- **Memory Foundation:** Track patterns over time, learn from violations
+- **Advanced Rules:** AI-generated code detection, framework-specific patterns
+- **Team Integration:** Git hooks, CI/CD pipeline integration

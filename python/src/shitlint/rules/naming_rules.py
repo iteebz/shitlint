@@ -11,6 +11,10 @@ def detect_naming_violations(file_path: Path, content: str, tree: ast.AST, thres
     """Detect naming violations."""
     violations = []
     
+    # Skip if not a Python file
+    if tree is None:
+        return violations
+    
     ceremony_vars = {
         'data', 'result', 'temp', 'obj', 'item', 'val', 'thing', 'stuff', 
         'var', 'x', 'y', 'z', 'i', 'j', 'k', 'value', 'element', 'node',

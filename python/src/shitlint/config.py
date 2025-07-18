@@ -15,12 +15,15 @@ class ShitLintConfig:
     max_file_size: int = 100000  # Skip files larger than this
     llm_provider: str = "auto"  # auto, gemini, openai, anthropic
     custom_rules: Dict[str, Any] = None
+    enabled_rules: Dict[str, bool] = None
     
     def __post_init__(self):
         if self.ignore_patterns is None:
             self.ignore_patterns = []
         if self.custom_rules is None:
             self.custom_rules = {}
+        if self.enabled_rules is None:
+            self.enabled_rules = {}
 
 
 def load_config(project_root: Path) -> ShitLintConfig:
@@ -39,7 +42,8 @@ def load_config(project_root: Path) -> ShitLintConfig:
             ignore_patterns=data.get("ignore_patterns", []),
             max_file_size=data.get("max_file_size", 100000),
             llm_provider=data.get("llm_provider", "auto"),
-            custom_rules=data.get("custom_rules", {})
+            custom_rules=data.get("custom_rules", {}),
+            enabled_rules=data.get("enabled_rules", {})
         )
     except (json.JSONDecodeError, FileNotFoundError):
         return ShitLintConfig()

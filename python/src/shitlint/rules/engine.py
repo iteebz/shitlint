@@ -20,25 +20,32 @@ from .docs_rules import detect_documentation_violations
 class RuleEngine:
     """Apply deterministic rules to detect code violations."""
     
-    def __init__(self, brutality: str = "professional"):
+    def __init__(self, brutality: str = "professional", config: Dict = None):
         self.brutality = brutality
         self.thresholds = self._get_brutality_thresholds(brutality)
         self.cross_file_analyzer = CrossFileAnalyzer()
         
-        # File-level rules
-        self.rules = [
-            detect_giant_files,
-            detect_import_ceremony, 
-            detect_duplicate_blocks,
-            detect_complex_functions,
-            detect_parameter_hell,
-            detect_naming_violations,
-            detect_magic_numbers,
-            detect_over_abstraction,
-            detect_commit_violations,
-            detect_dependency_violations,
-            detect_documentation_violations,
-        ]
+        # All available rules
+        all_rules = {
+            "giant_files": detect_giant_files,
+            "import_ceremony": detect_import_ceremony,
+            "duplicate_blocks": detect_duplicate_blocks,
+            "complex_functions": detect_complex_functions,
+            "parameter_hell": detect_parameter_hell,
+            "naming_violations": detect_naming_violations,
+            "magic_numbers": detect_magic_numbers,
+            "over_abstraction": detect_over_abstraction,
+            "commit_violations": detect_commit_violations,
+            "dependency_violations": detect_dependency_violations,
+            "documentation_violations": detect_documentation_violations,
+        }
+        
+        # Filter rules based on config
+        if config and "enabled_rules" in config:
+            enabled = config["enabled_rules"]
+            self.rules = [rule for name, rule in all_rules.items() if enabled.get(name, True)]
+        else:
+            self.rules = list(all_rules.values())
     
     def _get_brutality_thresholds(self, brutality: str) -> Dict:
         """Get detection thresholds based on brutality level."""
@@ -79,16 +86,22 @@ class RuleEngine:
         
         try:
             content = file_path.read_text(encoding='utf-8')
-            tree = ast.parse(content)
+            tree = None
             
-            # Collect for cross-file analysis
-            self.cross_file_analyzer.collect_function_fingerprints(file_path, tree)
+            # Only parse Python files with AST
+            if file_path.suffix == '.py':
+                try:
+                    tree = ast.parse(content)
+                    # Collect for cross-file analysis
+                    self.cross_file_analyzer.collect_function_fingerprints(file_path, tree)
+                except SyntaxError:
+                    pass
             
             # Run all rules
             for rule in self.rules:
                 violations.extend(rule(file_path, content, tree, self.thresholds))
                 
-        except (SyntaxError, UnicodeDecodeError):
+        except UnicodeDecodeError:
             pass
             
         return violations

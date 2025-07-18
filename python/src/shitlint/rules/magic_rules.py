@@ -11,6 +11,10 @@ def detect_magic_numbers(file_path: Path, content: str, tree: ast.AST, threshold
     """Detect magic numbers and hardcoded values."""
     violations = []
     
+    # Skip if not a Python file
+    if tree is None:
+        return violations
+    
     # Common magic numbers to ignore (these are usually fine)
     allowed_numbers = {0, 1, -1, 2, 10, 100, 1000}
     

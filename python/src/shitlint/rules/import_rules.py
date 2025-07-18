@@ -9,6 +9,10 @@ from .base import Violation
 
 def detect_import_ceremony(file_path: Path, content: str, tree: ast.AST, thresholds: Dict) -> List[Violation]:
     """Detect import addiction."""
+    # Skip if not a Python file
+    if tree is None:
+        return []
+    
     imports = []
     
     for node in ast.walk(tree):

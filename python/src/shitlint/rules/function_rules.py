@@ -11,6 +11,10 @@ def detect_complex_functions(file_path: Path, content: str, tree: ast.AST, thres
     """Detect overly complex functions."""
     violations = []
     
+    # Skip if not a Python file
+    if tree is None:
+        return violations
+    
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef):
             # Count decision points
@@ -51,6 +55,10 @@ def detect_complex_functions(file_path: Path, content: str, tree: ast.AST, thres
 def detect_parameter_hell(file_path: Path, content: str, tree: ast.AST, thresholds: Dict) -> List[Violation]:
     """Detect functions with too many parameters."""
     violations = []
+    
+    # Skip if not a Python file
+    if tree is None:
+        return violations
     
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef):

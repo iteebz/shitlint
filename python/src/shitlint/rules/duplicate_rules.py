@@ -10,6 +10,10 @@ from .base import Violation
 
 def detect_duplicate_blocks(file_path: Path, content: str, tree: ast.AST, thresholds: Dict) -> List[Violation]:
     """Detect copy-paste violations within a single file."""
+    # Skip if not a Python file
+    if tree is None:
+        return []
+    
     functions = []
     
     for node in ast.walk(tree):
