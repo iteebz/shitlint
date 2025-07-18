@@ -46,3 +46,36 @@ def detect_complex_functions(file_path: Path, content: str, tree: ast.AST, thres
                 ))
     
     return violations
+
+
+def detect_parameter_hell(file_path: Path, content: str, tree: ast.AST, thresholds: Dict) -> List[Violation]:
+    """Detect functions with too many parameters."""
+    violations = []
+    
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef):
+            # Count parameters (exclude self for methods)
+            param_count = len(node.args.args)
+            if param_count > 0 and node.args.args[0].arg == 'self':
+                param_count -= 1
+            
+            param_thresholds = thresholds.get("parameters", {"moderate": 4, "brutal": 6})
+            
+            if param_count >= param_thresholds["moderate"]:
+                if param_count >= param_thresholds["brutal"]:
+                    severity = "brutal"
+                    message = f"Function '{node.name}' has {param_count} parameters - parameter hell detected"
+                else:
+                    severity = "moderate"
+                    message = f"Function '{node.name}' has {param_count} parameters - consider refactoring"
+                
+                violations.append(Violation(
+                    rule="parameter_hell",
+                    file_path=str(file_path),
+                    line_number=node.lineno,
+                    severity=severity,
+                    message=message,
+                    context={"param_count": param_count}
+                ))
+    
+    return violations

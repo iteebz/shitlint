@@ -7,9 +7,10 @@ import ast
 from .base import Violation
 from .file_rules import detect_giant_files
 from .import_rules import detect_import_ceremony
-from .function_rules import detect_complex_functions
+from .function_rules import detect_complex_functions, detect_parameter_hell
 from .naming_rules import detect_naming_violations
 from .duplicate_rules import detect_duplicate_blocks, CrossFileAnalyzer
+from .magic_rules import detect_magic_numbers
 
 
 class RuleEngine:
@@ -26,7 +27,9 @@ class RuleEngine:
             detect_import_ceremony, 
             detect_duplicate_blocks,
             detect_complex_functions,
+            detect_parameter_hell,
             detect_naming_violations,
+            detect_magic_numbers,
         ]
     
     def _get_brutality_thresholds(self, brutality: str) -> Dict:
@@ -37,6 +40,7 @@ class RuleEngine:
                 "imports": {"moderate": 10, "brutal": 15},
                 "complexity": {"moderate": 8, "brutal": 12},
                 "function_lines": {"moderate": 30, "brutal": 50},
+                "parameters": {"moderate": 3, "brutal": 5},
                 "name_length": 20,
                 "enable_loop_var_check": True
             }
@@ -46,6 +50,7 @@ class RuleEngine:
                 "imports": {"moderate": 20, "brutal": 35},
                 "complexity": {"moderate": 15, "brutal": 25},
                 "function_lines": {"moderate": 80, "brutal": 120},
+                "parameters": {"moderate": 6, "brutal": 8},
                 "name_length": 35,
                 "enable_loop_var_check": False
             }
@@ -55,6 +60,7 @@ class RuleEngine:
                 "imports": {"moderate": 15, "brutal": 25},
                 "complexity": {"moderate": 10, "brutal": 15},
                 "function_lines": {"moderate": 50, "brutal": 80},
+                "parameters": {"moderate": 4, "brutal": 6},
                 "name_length": 25,
                 "enable_loop_var_check": False
             }
