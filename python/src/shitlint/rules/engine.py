@@ -11,6 +11,7 @@ from .function_rules import detect_complex_functions, detect_parameter_hell
 from .naming_rules import detect_naming_violations
 from .duplicate_rules import detect_duplicate_blocks, CrossFileAnalyzer
 from .magic_rules import detect_magic_numbers
+from .abstraction_rules import detect_over_abstraction
 
 
 class RuleEngine:
@@ -30,6 +31,7 @@ class RuleEngine:
             detect_parameter_hell,
             detect_naming_violations,
             detect_magic_numbers,
+            detect_over_abstraction,
         ]
     
     def _get_brutality_thresholds(self, brutality: str) -> Dict:
