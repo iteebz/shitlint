@@ -1,0 +1,19 @@
+name: Docs Coverage Grade
+
+on:
+  pull_request:
+    paths:
+      - '**/*.md'
+      - 'docs/**'
+      - 'examples/**'
+      - 'CHANGELOG*'
+      - 'CONTRIBUTING*'
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: iteebz/docs-coverage-grade@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
