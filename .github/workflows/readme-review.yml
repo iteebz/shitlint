@@ -1,0 +1,18 @@
+name: README Review
+
+on:
+  pull_request:
+    paths:
+      - 'README.md'
+      - 'README*'
+
+jobs:
+  readme-review:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: iteebz/readme-review@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
